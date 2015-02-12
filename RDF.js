@@ -12,7 +12,7 @@
 	"inRepository": true,
 	"translatorType": 1,
 	"browserSupport": "gcs",
-	"lastUpdated": "2014-03-11 13:44:24"
+	"lastUpdated": "2015-02-12 09:31:21"
 }
 
 /*
@@ -374,6 +374,11 @@ function detectType(newItem, node, ret) {
 		&& ZU.itemTypeExists(type)
 	) {
 		t.zotero = type;
+		if(type == "encyclopediaArticle" || type == "dictionaryEntry") {
+			container = getNodeByType(isPartOf, n.bib+"Book");
+		} else if(type == "conferencePaper") {
+			container = getNodeByType(isPartOf, n.bib+"Journal");
+		}
 	}
 
 	// dc:type, dcterms:type
@@ -1071,7 +1076,7 @@ function importItem(newItem, node) {
 		newItem.attachments.push({
 			"title":"Full Text PDF",
 			"mimeType":"application/pdf",
-			"url":pdfURL[0]
+			"path":pdfURL[0]
 		});
 	}
 	
