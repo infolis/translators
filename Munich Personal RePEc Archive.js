@@ -1,3 +1,17 @@
+{
+    "translatorID": "836be685-f557-4c97-8159-695ca567321a",
+    "label": "Munich Personal RePEc Archive",
+    "creator": "Konstantin Baierer",
+    "target": "http:\\/\\/mpra\\.ub\\.uni-muenchen\\.de/44201/?",
+    "minVersion": "1.0",
+    "maxVersion": "",
+    "priority": 100,
+    "inRepository": true,
+    "translatorType": 5,
+    "browserSupport": "gv",
+    "lastUpdated": "2015-02-12 11:41:43"
+}
+
 var xmlns = {'mets': 'http://www.loc.gov/METS/', 'mods': 'http://www.loc.gov/mods/v3'};
 
 
