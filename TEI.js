@@ -19,7 +19,7 @@
 		"Full TEI Document": false,
 		"Export Collections": false
 	},
-	"lastUpdated": "2014-05-23 16:00:00"
+	"lastUpdated":"2015-09-01 06:39:12"
 }
 
 // ********************************************************************
@@ -105,9 +105,9 @@ var ns = {"tei": "http://www.tei-c.org/ns/1.0",
 
 
 
-var exportedXMLIds = [];
-var generatedItems = [];
-var allItems = [];
+var exportedXMLIds = {};
+var generatedItems = {};
+var allItems = {};
 
 
 function genXMLId (item){
@@ -285,7 +285,7 @@ function generateItem(item, teiDoc) {
         }
         if(item.seriesNumber){
             var seriesNumber = teiDoc.createElementNS(ns.tei, "biblScope");
-            seriesNumber.setAttribute("type", "vol");
+            seriesNumber.setAttribute("unit", "volume");
             seriesNumber.appendChild(teiDoc.createTextNode(item.seriesNumber));
             series.appendChild(seriesNumber);
         }
@@ -378,25 +378,25 @@ function generateItem(item, teiDoc) {
     }
     if(item.volume){
         var volume = teiDoc.createElementNS(ns.tei, "biblScope");
-        volume.setAttribute("type","vol");
+        volume.setAttribute("unit","volume");
         volume.appendChild(teiDoc.createTextNode(item.volume));
         imprint.appendChild(volume);
     }
     if(item.issue){
         var issue = teiDoc.createElementNS(ns.tei, "biblScope");
-        issue.setAttribute("type","issue");
+        issue.setAttribute("unit","issue");
         issue.appendChild(teiDoc.createTextNode(item.issue));
         imprint.appendChild(issue);
     }
     if(item.section){
         var section = teiDoc.createElementNS(ns.tei, "biblScope");
-        section.setAttribute("type","chap");
+        section.setAttribute("unit","chapter");
         section.appendChild(teiDoc.createTextNode(item.section));
         imprint.appendChild(section);
     }
     if(item.pages){
         var pages = teiDoc.createElementNS(ns.tei, "biblScope");
-        pages.setAttribute("type","pp");
+        pages.setAttribute("unit","page");
         pages.appendChild(teiDoc.createTextNode(item.pages));
         imprint.appendChild(pages);
     }
@@ -442,7 +442,7 @@ function generateItem(item, teiDoc) {
     }
 
     //export notes
-    if(Zotero.getOption("exportNotes")) {
+    if(item.notes && Zotero.getOption("exportNotes")) {
         for(var n in item.notes) {
             // do only some basic cleaning of the html
             // strip HTML tags
@@ -506,7 +506,8 @@ function generateCollection(collection, teiDoc){
         var colHead = teiDoc.createElementNS(ns.tei, "head");
         colHead.appendChild(teiDoc.createTextNode(collection.name));
         listBibl.appendChild(colHead);
-        for each(var child in children){
+        for (var i=0; i<children.length; i++) {
+            var child = children[i];
             if(child.type == "collection"){
                 listBibl.appendChild(generateCollection(child, teiDoc));
             }
@@ -523,8 +524,8 @@ function generateTEIDocument(listBibls, teiDoc){
     var body = teiDoc.createElementNS(ns.tei, "body");
     teiDoc.documentElement.appendChild(text);
     text.appendChild(body);
-    for each(var lb in listBibls){
-        body.appendChild(lb);
+    for (var i=0; i<listBibls.length; i++) {
+        body.appendChild(listBibls[i]);
     }
     return teiDoc;
 }
@@ -562,7 +563,8 @@ function doExport() {
     }
     else {
         var listBibl = teiDoc.createElementNS(ns.tei, "listBibl");
-        for each(var item in allItems){
+        for (var i in allItems) {
+            var item = allItems[i];
             //skip attachments
             if(item.itemType == "attachment"){
                 continue;
@@ -582,8 +584,8 @@ function doExport() {
     else{
         if(listBibls.length > 1){
             outputElement = teiDoc.createElementNS(ns.tei, "listBibl");
-            for each(var lb in listBibls){
-                outputElement.appendChild(lb);
+            for (var i=0; i<listBibls.length; i++) {
+                outputElement.appendChild(listBibls[i]);
             }
         }
         else if(listBibls.length == 1){
@@ -595,7 +597,7 @@ function doExport() {
     }
 
     // write to file.
-    Zotero.write('<?xml version="1.0"?>'+"\n");
+    Zotero.write('<?xml version="1.0" encoding="UTF-8"?>'+"\n");
     var serializer = new XMLSerializer();
     Zotero.write(serializer.serializeToString(outputElement));
 }

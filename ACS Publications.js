@@ -2,14 +2,14 @@
 	"translatorID": "938ebe32-2b2e-4349-a5b3-b3a05d3de627",
 	"label": "ACS Publications",
 	"creator": "Sean Takats, Michael Berkowitz, Santawort, and Aurimas Vinckevicius",
-	"target": "https?://pubs\\.acs\\.org[^/]*/(?:toc/|journal/|topic/|isbn/\\d|doi/(?:full|abs)/10\\.|action/doSearch\\?)",
-	"minVersion": "3.0",
+	"target": "https?://pubs\\.acs\\.org/(toc/|journal/|topic/|isbn/\\d|doi/(full|abs)/10\\.|action/doSearch\\?)",
+	"minVersion": "4.0.5",
 	"maxVersion": "",
 	"priority": 100,
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2014-10-23 02:36:27"
+	"lastUpdated": "2015-06-05 20:36:28"
 }
 
 function getSearchResults(doc, checkOnly, itemOpts) {
@@ -94,8 +94,7 @@ function attachSupp(item, doi, opts) {
 		attachment = {
 			title: opts.attach[i]
 		};
-		attachment.url = opts.host + 'doi/suppl/'
-			+ doi + '/suppl_file/' + attachment.title;	
+		attachment.url = '/doi/suppl/' + doi + '/suppl_file/' + attachment.title;	
 		attachment.mimeType = getSuppMimeType(attachment.title);
 		if(opts.attachAsLink || !attachment.mimeType) { //don't download unknown file types
 			attachment.snapshot = false;
@@ -115,8 +114,8 @@ function detectWeb(doc, url) {
 	) {
 		return "multiple";
 	} else if (getDoi(url)) {
-		var h2 = ZU.xpathText(doc, '//div[@id="articleHead"]/h2');
-		if(h2 && h2.indexOf("Chapter") !=-1) {
+		var h2 = doc.querySelector('.content-header > h2');
+		if(h2 && h2.textContent.indexOf("Chapter") !=-1) {
 			return "bookSection";
 		} else {
 			return "journalArticle";
@@ -125,9 +124,7 @@ function detectWeb(doc, url) {
 }
 
 function doWeb(doc, url){
-	var opts = {
-		host: 'http://' + doc.location.host + "/"
-	};
+	var opts = {};
 	//reduce some overhead by fetching these only once
 	if (Z.getHiddenPref) {
 		opts.attachSupp = Z.getHiddenPref("attachSupplementary");
@@ -172,7 +169,7 @@ function doWeb(doc, url){
 		if(!opts.attach) opts.attach = [];
 		
 		// See if we have pdfplus
-		var div = doc.getElementById('links');
+		var div = doc.getElementsByClassName('fulltext-formats')[0];
 		var itemOpts = {};
 		itemOpts.highRes = !!div.getElementsByClassName('pdf-high-res').length;
 		itemOpts.pdfPlus = !!div.getElementsByClassName('pdf-low-res').length;
@@ -185,7 +182,7 @@ function scrape(items, opts){
 	//get citation export page's source code;
 	for(var i=0, n=items.length; i<n; i++) {
 		(function(item) {
-			var url = opts.host + 'action/showCitFormats?doi=' + encodeURIComponent(item.doi);
+			var url = '/action/showCitFormats?doi=' + encodeURIComponent(item.doi);
 			//Z.debug(url);
 			ZU.doGet(url, function(text){
 				//Z.debug(text)
@@ -200,7 +197,7 @@ function scrape(items, opts){
 }
 
 function processCallback(fetchItem, opts, downloadFileName) {
-		var baseurl = "http://pubs.acs.org/action/downloadCitation";
+		var baseurl = "/action/downloadCitation";
 		var doi = fetchItem.doi;
 		var post = "doi=" + encodeURIComponent(doi) + "&downloadFileName=" + encodeURIComponent(downloadFileName)
 			+ "&include=abs&format=refman&direct=on"
@@ -227,7 +224,7 @@ function processCallback(fetchItem, opts, downloadFileName) {
 				) {
 					item.attachments.push({
 						title: "ACS Full Text PDF w/ Links",
-						url: opts.host + 'doi/pdfplus/' + doi,
+						url: '/doi/pdfplus/' + doi,
 						mimeType:"application/pdf"
 					});
 				}
@@ -237,14 +234,14 @@ function processCallback(fetchItem, opts, downloadFileName) {
 				) {
 					item.attachments.push({
 						title: "ACS Full Text PDF",
-						url: opts.host + 'doi/pdf/' + doi,
+						url: '/doi/pdf/' + doi,
 						mimeType:"application/pdf"
 					});
 				}
 				
 				item.attachments.push({
 					title: "ACS Full Text Snapshot",
-					url: opts.host + 'doi/full/' + doi,
+					url: '/doi/full/' + doi,
 					mimeType:"text/html"
 				});
 				
@@ -255,7 +252,7 @@ function processCallback(fetchItem, opts, downloadFileName) {
 						attachSupp(item, doi, opts);
 					} else if(opts.attachSupp && fetchItem.opts.hasSupp) {
 						//was a search result and has supp info
-						var suppUrl = opts.host + 'doi/suppl/' + doi;
+						var suppUrl = '/doi/suppl/' + doi;
 						
 						if(opts.attachAsLink) {
 							//if we're only attaching links, it's not worth linking to each doc
@@ -272,7 +269,6 @@ function processCallback(fetchItem, opts, downloadFileName) {
 									if(div) {
 										var files = getSuppFiles(div);
 										attachSupp(item, doi, {
-											host: opts.host,
 											attach: files,
 											attachAsLink: opts.attachAsLink
 										});
@@ -384,7 +380,7 @@ var testCases = [
 					}
 				],
 				"date": "January 1, 2011",
-				"ISBN": "0-8412-2652-0",
+				"ISBN": "9780841226524",
 				"abstractNote": "Natural organic matter (NOM) is an inherently complex mixture of polyfunctional organic molecules. Because of their universality and chemical reversibility, oxidation/reductions (redox) reactions of NOM have an especially interesting and important role in geochemistry. Variabilities in NOM composition and chemistry make studies of its redox chemistry particularly challenging, and details of NOM-mediated redox reactions are only partially understood. This is in large part due to the analytical difficulties associated with NOM characterization and the wide range of reagents and experimental systems used to study NOM redox reactions. This chapter provides a summary of the ongoing efforts to provide a coherent comprehension of aqueous redox chemistry involving NOM and of techniques for chemical characterization of NOM. It also describes some attempts to confirm the roles of different structural moieties in redox reactions. In addition, we discuss some of the operational parameters used to describe NOM redox capacities and redox states, and describe nomenclature of NOM redox chemistry. Several relatively facile experimental methods applicable to predictions of the NOM redox activity and redox states of NOM samples are discussed, with special attention to the proposed use of fluorescence spectroscopy to predict relevant redox characteristics of NOM samples.",
 				"bookTitle": "Aquatic Redox Chemistry",
 				"libraryCatalog": "ACS Publications",
@@ -490,7 +486,7 @@ var testCases = [
 	},
 	{
 		"type": "web",
-		"url": "http://pubs.acs.org/topic/pharmaceuticials",
+		"url": "http://pubs.acs.org/topic/pharmacology",
 		"items": "multiple"
 	}
 ]
